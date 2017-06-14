@@ -1,6 +1,6 @@
 import test from 'ava'
 import { resolve } from 'path'
-const port = 4002
+const port = 4005
 const url = (route) => 'http://localhost:' + port + route
 
 let nuxt = null
@@ -33,12 +33,8 @@ test('/404 should display an error too', async t => {
 })
 
 test('/ with renderAndGetWindow()', async t => {
-  try {
-    await nuxt.renderAndGetWindow(url('/'))
-  } catch (e) {
-    t.true(e.message.includes('Could not load the nuxt app'))
-    t.true(e.body.includes('not_defined is not defined'))
-  }
+  const err = await t.throws(nuxt.renderAndGetWindow(url('/')))
+  t.is(err.response.statusCode, 500)
 })
 
 // Close server and ask nuxt to stop listening to file changes

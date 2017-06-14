@@ -1,6 +1,7 @@
 import test from 'ava'
 import { resolve } from 'path'
-const port = 4005
+import rp from 'request-promise-native'
+const port = 4001
 const url = (route) => 'http://localhost:' + port + route
 
 let nuxt = null
@@ -25,8 +26,17 @@ test('/stateless', async t => {
   t.true(html.includes('<h1>My component!</h1>'))
 })
 
+test('/_nuxt/test.hot-update.json should returns empty html', async t => {
+  try {
+    await rp(url('/_nuxt/test.hot-update.json'))
+  } catch (err) {
+    t.is(err.statusCode, 404)
+    t.is(err.response.body, '')
+  }
+})
+
 // Close server and ask nuxt to stop listening to file changes
 test.after('Closing server and nuxt.js', t => {
   server.close()
-  nuxt.close()
+  nuxt.close(() => {})
 })

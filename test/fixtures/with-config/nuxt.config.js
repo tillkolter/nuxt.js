@@ -1,6 +1,8 @@
 module.exports = {
+  srcDir: __dirname,
   router: {
     base: '/test/',
+    middleware: 'noop',
     extendRoutes (routes) {
       routes.push({
         name: 'about-bis',
@@ -9,7 +11,7 @@ module.exports = {
       })
     }
   },
-  cache: true,
+  transition: 'test',
   offline: true,
   plugins: [
     '~plugins/test.js',
@@ -23,6 +25,7 @@ module.exports = {
     string: 'Nuxt.js'
   },
   build: {
+    extractCSS: true,
     publicPath: '/orion/',
     analyze: {
       analyzerMode: 'disabled',
@@ -30,6 +33,14 @@ module.exports = {
     },
     extend (config, options) {
       config.devtool = 'nosources-source-map'
+    }
+  },
+  css: [
+    { src: '~/assets/app.css' }
+  ],
+  render: {
+    static: {
+      maxAge: '1y'
     }
   }
 }

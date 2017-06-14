@@ -1,7 +1,9 @@
 import test from 'ava'
 import { resolve } from 'path'
 import rp from 'request-promise-native'
-const port = 4000
+import stdMocks from 'std-mocks'
+
+const port = 4003
 const url = (route) => 'http://localhost:' + port + route
 
 let nuxt = null
@@ -45,6 +47,7 @@ test('/stateful', async t => {
 test('/store', async t => {
   const { html } = await nuxt.renderRoute('/store')
   t.true(html.includes('<h1>Vuex Nested Modules</h1>'))
+  t.true(html.includes('<p>1</p>'))
 })
 
 test('/head', async t => {
@@ -127,9 +130,27 @@ test('/error2 status code', async t => {
   try {
     await rp(url('/error2'))
   } catch (err) {
-    t.true(err.statusCode === 500)
+    t.is(err.statusCode, 500)
     t.true(err.response.body.includes('Custom error'))
   }
+})
+
+test('/redirect2 status code', async t => {
+  stdMocks.use()
+  await rp(url('/redirect2')) // Should console.error
+  stdMocks.restore()
+  const output = stdMocks.flush()
+  t.true(output.stderr.length >= 1)
+  t.true(output.stderr[0].includes('Error: NOPE!'))
+})
+
+test('ETag Header', async t => {
+  const {headers: {etag}} = await rp(url('/stateless'), {resolveWithFullResponse: true})
+  // Validate etag
+  t.regex(etag, /W\/".*"$/)
+  // Verify functionality
+  const error = await t.throws(rp(url('/stateless'), {headers: {'If-None-Match': etag}}))
+  t.is(error.statusCode, 304)
 })
 
 // Close server and ask nuxt to stop listening to file changes

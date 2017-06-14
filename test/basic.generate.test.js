@@ -4,7 +4,7 @@ import http from 'http'
 import serveStatic from 'serve-static'
 import finalhandler from 'finalhandler'
 import rp from 'request-promise-native'
-const port = 4003
+const port = 4002
 const url = (route) => 'http://localhost:' + port + route
 
 let nuxt = null
@@ -18,7 +18,9 @@ test.before('Init Nuxt.js', async t => {
   config.rootDir = rootDir
   config.dev = false
   nuxt = new Nuxt(config)
-  await nuxt.generate()
+  try {
+    await nuxt.generate() // throw an error (of /validate route)
+  } catch (err) {}
   const serve = serveStatic(resolve(__dirname, 'fixtures/basic/dist'))
   server = http.createServer((req, res) => {
     serve(req, res, finalhandler(req, res))
@@ -72,9 +74,9 @@ test('/users/2', async t => {
   t.true(html.includes('<h1>User: 2</h1>'))
 })
 
-test('/users/3', async t => {
+test('/users/3 (payload given)', async t => {
   const html = await rp(url('/users/3'))
-  t.true(html.includes('<h1>User: 3</h1>'))
+  t.true(html.includes('<h1>User: 3000</h1>'))
 })
 
 test('/users/4 -> Not found', async t => {
